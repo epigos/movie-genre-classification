@@ -28,10 +28,6 @@ def movie_classifier(title, description):
             "Description must provided. Run `python main.py movie_classifier --help` for more details"
         )
 
-    click.echo(
-        f"Predicting movie genre with <title: {title}> "
-        f"and <description: {description}>"
-    )
     clf = MovieGenreClassifier(model_path=config.MOVIE_GENRE_CLF_PATH)
     output = clf.predict(title, description)
     click.echo(output)

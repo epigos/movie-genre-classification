@@ -24,7 +24,15 @@ class MovieGenreClassifier:
         self.model = model_dict["model"]
         self.labeler = model_dict["labeler"]
 
-    def predict(self, title, description):
+    def predict(self, title: str, description: str) -> dict:
+        """
+        Predict movie genre using title and description of the movie
+        Args:
+            title (): the movie title
+            description (): the movie description
+
+        Returns:
+        """
         input_text = f"{title} {description}"
         preds = self.model.predict([input_text])
 
@@ -33,5 +41,13 @@ class MovieGenreClassifier:
 
     @classmethod
     def train(cls, dataset_path):
+        """
+        Train movie genre classification model using the given dataset
+        Args:
+            dataset_path (): Path to dataset
+
+        Returns:
+
+        """
         trainer = MovieGenreTrainer(dataset_path=dataset_path)
         trainer.train()

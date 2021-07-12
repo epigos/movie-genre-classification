@@ -20,6 +20,8 @@ from movie_lens import config, utils
 class MovieGenreTrainer:
     dataset_path: Path
     df: typing.Optional[pd.DataFrame] = None
+    feature_cols = ["title", "overview"]
+    target_col: str = "genres"
     test_size: float = 0.2
     random_state: int = 47
     max_features: int = 1000
@@ -40,30 +42,30 @@ class MovieGenreTrainer:
         labeler, labels = self.extract_genres(df)
 
         # combine title and overview columns
-        features = df["title"] + df["overview"]
+        features = df[self.feature_cols].apply(" ".join, axis=1)
         # build and train the model
         model, metrics = self.train_model(features, labels, labeler.classes_)
         # save model
         self.save_model(model, labeler)
         return metrics
 
-    @staticmethod
-    def preprocess_data(df):
+    def preprocess_data(self, df):
         print(df.head())
         df.info()
         # From the given problem statement, we need only the following columns
         # title, overview and genre
-        df = df[["title", "overview", "genres"]]
+        selected_cols = self.feature_cols + [self.target_col]
+        df = df[selected_cols]
         # check missing values
         print("\nMissing values:\n", df.isna().sum())
         # drop the missing values since its text data and not appropriate to
         # make imputations for the missing values.
-        df = df.dropna(subset=["title", "overview"])
+        df = df.dropna(subset=self.feature_cols)
         # let check some values in the genres column
-        print(df["genres"])
+        print(df[self.target_col])
         # The genres is a list of dictionaries, so will convert into a list of genres names
-        df["genres"] = (
-            df["genres"]
+        df[self.target_col] = (
+            df[self.target_col]
             .apply(ast.literal_eval)
             .apply(
                 lambda genre: [x["name"] for x in genre]
@@ -72,18 +74,19 @@ class MovieGenreTrainer:
             )
         )
         # select the first genre as the genre for the movie
-        df["genres"] = df["genres"].apply(lambda x: x[0] if len(x) > 0 else None)
-        print(df["genres"])
+        df[self.target_col] = df[self.target_col].apply(
+            lambda x: x[0] if len(x) > 0 else None
+        )
+        print(df[self.target_col])
         # We have some rows with no genres, will drop those to have a clean data
-        df = df.dropna(subset=["genres"])
+        df = df.dropna(subset=[self.target_col])
         # check missing values
         print("\nMissing values:\n", df.isna().sum())
         return df
 
-    @staticmethod
-    def extract_genres(df):
+    def extract_genres(self, df):
         labeler = LabelEncoder()
-        labels = labeler.fit_transform(df["genres"])
+        labels = labeler.fit_transform(df[self.target_col])
 
         return labeler, labels
 
