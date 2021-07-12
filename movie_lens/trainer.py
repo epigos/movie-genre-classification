@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.preprocessing import LabelEncoder
 
 from movie_lens import config, utils
 
@@ -22,12 +22,17 @@ class MovieGenreTrainer:
     df: typing.Optional[pd.DataFrame] = None
     test_size: float = 0.2
     random_state: int = 47
+    max_features: int = 1000
+
+    def load_data(self):
+        return pd.read_csv(self.dataset_path)
 
     def train(self):
         if not self.dataset_path.exists():  # Download dataset if it doesn't exist
             utils.download_dataset(config.DATASET_URL, config.DATA_DIR)
 
-        self.df = pd.read_csv(self.dataset_path)
+        if self.df is None:
+            self.df = self.load_data()
 
         df = self.preprocess_data(self.df)
 
@@ -37,12 +42,10 @@ class MovieGenreTrainer:
         # combine title and overview columns
         features = df["title"] + df["overview"]
         # build and train the model
-        model = self.train_model(features, labels, labeler.classes_)
+        model, metrics = self.train_model(features, labels, labeler.classes_)
         # save model
-        logging.info(f"Saving trained model to {config.MOVIE_GENRE_CLF_PATH}")
-        joblib.dump(
-            {"pipeline": model, "labeler": labeler}, config.MOVIE_GENRE_CLF_PATH
-        )
+        self.save_model(model, labeler)
+        return metrics
 
     @staticmethod
     def preprocess_data(df):
@@ -68,7 +71,8 @@ class MovieGenreTrainer:
                 else []
             )
         )
-        df["genres"] = df["genres"].apply(lambda x: x if len(x) > 0 else None)
+        # select the first genre as the genre for the movie
+        df["genres"] = df["genres"].apply(lambda x: x[0] if len(x) > 0 else None)
         print(df["genres"])
         # We have some rows with no genres, will drop those to have a clean data
         df = df.dropna(subset=["genres"])
@@ -78,7 +82,7 @@ class MovieGenreTrainer:
 
     @staticmethod
     def extract_genres(df):
-        labeler = MultiLabelBinarizer()
+        labeler = LabelEncoder()
         labels = labeler.fit_transform(df["genres"])
 
         return labeler, labels
@@ -103,7 +107,7 @@ class MovieGenreTrainer:
         # We'll convert the title and overview features into TF-IDF
         # features using sklearn's TfidfVectorizer module
         tf_idf = TfidfVectorizer(
-            max_features=1000, stop_words="english", lowercase=True
+            max_features=self.max_features, stop_words="english", lowercase=True
         )
 
         # define RandomForestClassifier
@@ -115,8 +119,10 @@ class MovieGenreTrainer:
         logging.info("Training RandomForestClassifier...")
         pipe.fit(X_train, y_train)
 
-        self.model_reports(pipe, X_train, y_train, X_test, y_test, column_names)
-        return pipe
+        metrics = self.model_reports(
+            pipe, X_train, y_train, X_test, y_test, column_names
+        )
+        return pipe, metrics
 
     @staticmethod
     def model_reports(model, X_train, y_train, X_test, y_test, target_names):
@@ -138,10 +144,19 @@ class MovieGenreTrainer:
             ),
         )
 
-        print("Accuracy")
+        print("---Accuracy---")
 
         train_acc = accuracy_score(y_true=y_train, y_pred=train_pred)
         test_acc = accuracy_score(y_true=y_test, y_pred=test_pred)
-        print("Traning: ", train_acc)
-        print("Validation: ", test_acc)
+        print("Traning: {:.2f}%".format(train_acc * 100))
+        print("Validation: {:.2f}%".format(test_acc * 100))
         return train_acc, test_acc
+
+    @staticmethod
+    def save_model(model, labeler):
+        logging.info(f"Saving trained model to {config.MOVIE_GENRE_CLF_PATH}")
+        joblib.dump(
+            {"model": model, "labeler": labeler},
+            config.MOVIE_GENRE_CLF_PATH,
+            compress=True,
+        )
