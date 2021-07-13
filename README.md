@@ -1,6 +1,8 @@
 # Machine Learning Engineering task - Philip Adzanoukpe
 
-https://docs.google.com/document/d/1Gx2fIG2uDg1eLp-8q7mChcn6hy5FD_ObFyAsOBH_j1Q/edit
+[Task](https://docs.google.com/document/d/1Gx2fIG2uDg1eLp-8q7mChcn6hy5FD_ObFyAsOBH_j1Q/edit)
+
+[Jupyter notebook](https://colab.research.google.com/drive/1gGGBYXKv98w31PbHhdig4k7OO586t6UO?usp=sharing)
 
 # Project Setup
 
