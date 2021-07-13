@@ -1,6 +1,6 @@
 .PHONY: docker/build  docker/test tests
 
-DOCKER_IMAGE_TAG=truelayer_ml_task
+DOCKER_IMAGE_TAG=movie_classification
 
 
 docker/build:

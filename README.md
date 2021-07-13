@@ -1,6 +1,4 @@
-# Machine Learning Engineering task - Philip Adzanoukpe
-
-[Task](https://docs.google.com/document/d/1Gx2fIG2uDg1eLp-8q7mChcn6hy5FD_ObFyAsOBH_j1Q/edit)
+# Movie Genre Classification
 
 [Jupyter notebook](https://colab.research.google.com/drive/1gGGBYXKv98w31PbHhdig4k7OO586t6UO?usp=sharing)
 
@@ -14,17 +12,17 @@ Build docker image
 
 Check available commands
 
-    docker run truelayer_movie_classifier
+    docker run movie_classification
 
 Run movie_classifier
 
-    docker run truelayer_movie_classifier movie_classifier --title "Toy story" \
+    docker run movie_classification movie_classifier --title "Toy story" \
         --description "Led by Woody, Andy's toys live happily in his room until Andy's birthday brings 
         Buzz Lightyear onto the scene. Afraid of losing his place in Andy's heart, Woody plots against Buzz"
 
 Train model
 
-    docker run truelayer_movie_classifier train
+    docker run movie_classification train
 
 Run tests
 
